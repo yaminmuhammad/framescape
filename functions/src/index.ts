@@ -85,7 +85,7 @@ export const generateImage = onCall(
 
       // 2. Call Google Gemini API for image generation
       const genAI = new GoogleGenerativeAI(geminiApiKey.value());
-      const model = genAI.getGenerativeModel({model: "gemini-1.5-flash-001"});
+      const model = genAI.getGenerativeModel({model: "gemini-2.5-flash-lite"});
 
       const result = await model.generateContent([
         {
