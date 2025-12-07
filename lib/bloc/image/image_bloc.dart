@@ -25,7 +25,7 @@ class ImageBloc extends Bloc<ImageEvent, ImageState> {
       state.copyWith(
         status: ImageStatus.imageSelected,
         selectedImage: event.imageFile,
-        clearGeneratedText: true,
+        clearGeneratedImages: true,
       ),
     );
   }
@@ -59,7 +59,12 @@ class ImageBloc extends Bloc<ImageEvent, ImageState> {
       return;
     }
 
-    emit(state.copyWith(status: ImageStatus.generating));
+    emit(
+      state.copyWith(
+        status: ImageStatus.generating,
+        selectedCategory: event.category,
+      ),
+    );
 
     try {
       // Upload image to Storage
@@ -71,13 +76,13 @@ class ImageBloc extends Bloc<ImageEvent, ImageState> {
       // Call Cloud Function
       final result = await _imageService.generateFromImage(
         imagePath: imagePath,
-        prompt: event.prompt,
+        category: event.category,
       );
 
       emit(
         state.copyWith(
           status: ImageStatus.generated,
-          generatedText: result.generatedText,
+          generatedImageUrls: result.generatedImageUrls,
         ),
       );
     } catch (e) {

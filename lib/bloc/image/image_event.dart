@@ -14,8 +14,8 @@ class ImageCleared extends ImageEvent {}
 
 /// Generate AI content from the selected image
 class ImageGenerate extends ImageEvent {
-  final String prompt;
-  ImageGenerate(this.prompt);
+  final String category;
+  ImageGenerate(this.category);
 }
 
 /// Load user's generation history

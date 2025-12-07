@@ -28,20 +28,20 @@ class ImageService {
   /// Returns the generation result
   Future<GenerationResult> generateFromImage({
     required String imagePath,
-    required String prompt,
+    required String category,
   }) async {
     try {
       final callable = _functions.httpsCallable('generateImage');
       final result = await callable.call({
         'imagePath': imagePath,
-        'prompt': prompt,
+        'category': category,
       });
 
       final data = result.data as Map<String, dynamic>;
       return GenerationResult(
         success: data['success'] ?? false,
         generatedId: data['generatedId'] ?? '',
-        generatedText: data['generatedText'] ?? '',
+        generatedImageUrls: List<String>.from(data['generatedImageUrls'] ?? []),
         createdAt: DateTime.tryParse(data['createdAt'] ?? '') ?? DateTime.now(),
       );
     } on FirebaseFunctionsException catch (e) {
@@ -68,13 +68,13 @@ class ImageService {
 class GenerationResult {
   final bool success;
   final String generatedId;
-  final String generatedText;
+  final List<String> generatedImageUrls;
   final DateTime createdAt;
 
   GenerationResult({
     required this.success,
     required this.generatedId,
-    required this.generatedText,
+    required this.generatedImageUrls,
     required this.createdAt,
   });
 }
