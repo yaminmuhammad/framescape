@@ -6,10 +6,17 @@ service firebase.storage {
       // Allow read/write only to authenticated users for their own folder
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
-    
+
+    // Public folder - accessible by anyone (for generated images)
+    match /public/{allPaths=**} {
+      allow read: if true;  // Anyone can read
+      allow write: if false; // But only Cloud Functions can write
+    }
+
     // Generated images folder - accessible by Cloud Functions and owner
     match /generated/{userId}/{allPaths=**} {
-      allow read: if request.auth != null && request.auth.uid == userId;
+      // Allow public read access for testing
+      allow read: if true;
       // Write is done by Cloud Functions (admin SDK), not client
     }
   }
