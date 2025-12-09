@@ -46,8 +46,8 @@ dependencies:
   image_picker: ^1.1.2
 
   # State Management (BLoC)
-  flutter_bloc: ^9.0.0
-  bloc: ^9.0.0
+  flutter_bloc: ^9.1.0
+  bloc: ^9.1.0
 
   # Utilities
   uuid: ^4.5.1
@@ -66,6 +66,13 @@ dependencies:
 
 dev_dependencies:
   flutter_test:
+    sdk: flutter
+
+  # Testing
+  bloc_test: ^10.0.0
+  mockito: ^5.4.4
+  build_runner: ^2.4.9
+  integration_test:
     sdk: flutter
 
   # The "flutter_lints" package below contains a set of recommended lints to
