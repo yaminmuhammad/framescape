@@ -113,103 +113,124 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: BlocConsumer<ImageBloc, ImageState>(
-          listener: (context, state) {
-            if (state.status == ImageStatus.error &&
-                state.errorMessage != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.errorMessage!),
-                  backgroundColor: colorScheme.error,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            }
-          },
-          builder: (context, state) {
-            final mainContent = CustomScrollView(
-              slivers: [
-                // App Bar
-                SliverAppBar(
-                  floating: true,
-                  backgroundColor: colorScheme.surface,
-                  surfaceTintColor: Colors.transparent,
-                  title: Text(
-                    'FrameScape',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      color: colorScheme.onSurface,
+        child: MultiBlocListener(
+          listeners: [
+            BlocListener<AuthBloc, AuthState>(
+              listener: (context, state) {
+                if (state.status == AuthStatus.error &&
+                    state.errorMessage != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Auth Error: ${state.errorMessage}'),
+                      backgroundColor: colorScheme.error,
+                      behavior: SnackBarBehavior.floating,
+                      duration: const Duration(seconds: 4),
                     ),
+                  );
+                }
+              },
+            ),
+            BlocListener<ImageBloc, ImageState>(
+              listener: (context, state) {
+                if (state.status == ImageStatus.error &&
+                    state.errorMessage != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.errorMessage!),
+                      backgroundColor: colorScheme.error,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
+          child: BlocBuilder<ImageBloc, ImageState>(
+            builder: (context, state) {
+              final mainContent = CustomScrollView(
+                slivers: [
+                  // App Bar
+                  SliverAppBar(
+                    floating: true,
+                    backgroundColor: colorScheme.surface,
+                    surfaceTintColor: Colors.transparent,
+                    title: Text(
+                      'FrameScape',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    centerTitle: false,
+                    // actions: [
+                    //   BlocBuilder<AuthBloc, AuthState>(
+                    //     builder: (context, authState) {
+                    //       return IconButton(
+                    //         icon: Icon(
+                    //           authState.isAuthenticated
+                    //               ? Icons.person
+                    //               : Icons.person_outline,
+                    //           color: colorScheme.primary,
+                    //         ),
+                    //         onPressed: () {
+                    //           // Show user info or login
+                    //         },
+                    //       );
+                    //     },
+                    //   ),
+                    // ],
                   ),
-                  centerTitle: false,
-                  // actions: [
-                  //   BlocBuilder<AuthBloc, AuthState>(
-                  //     builder: (context, authState) {
-                  //       return IconButton(
-                  //         icon: Icon(
-                  //           authState.isAuthenticated
-                  //               ? Icons.person
-                  //               : Icons.person_outline,
-                  //           color: colorScheme.primary,
-                  //         ),
-                  //         onPressed: () {
-                  //           // Show user info or login
-                  //         },
-                  //       );
-                  //     },
-                  //   ),
-                  // ],
-                ),
 
-                // Content
-                SliverPadding(
-                  padding: const EdgeInsets.all(20),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      // Image Selection Area
-                      _buildImageArea(state, colorScheme),
-                      const SizedBox(height: 24),
+                  // Content
+                  SliverPadding(
+                    padding: const EdgeInsets.all(20),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        // Image Selection Area
+                        _buildImageArea(state, colorScheme),
+                        const SizedBox(height: 24),
 
-                      // Category Selection
-                      _buildCategorySection(colorScheme),
-                      const SizedBox(height: 20),
+                        // Category Selection
+                        _buildCategorySection(colorScheme),
+                        const SizedBox(height: 20),
 
-                      // Generate Button
-                      _buildGenerateButton(state, colorScheme),
-                      const SizedBox(height: 32),
+                        // Generate Button
+                        _buildGenerateButton(state, colorScheme),
+                        const SizedBox(height: 32),
 
-                      // Results Section
-                      if (state.hasResult || state.isGenerating) ...[
-                        _buildResultSection(state, colorScheme),
-                      ],
-                    ]),
-                  ),
-                ),
-              ],
-            );
-
-            // Full-screen image viewer
-            if (_fullScreenImageUrl != null) {
-              return Stack(
-                children: [
-                  mainContent,
-                  _FullScreenImageViewer(
-                    imageUrl: _fullScreenImageUrl!,
-                    onClose: () {
-                      setState(() {
-                        _fullScreenImageUrl = null;
-                      });
-                    },
-                    onSave: _saveImageToGallery,
-                    onShare: _shareImage,
+                        // Results Section
+                        if (state.hasResult || state.isGenerating) ...[
+                          _buildResultSection(state, colorScheme),
+                        ],
+                      ]),
+                    ),
                   ),
                 ],
               );
-            }
 
-            return mainContent;
-          },
+              // Full-screen image viewer
+              if (_fullScreenImageUrl != null) {
+                return Stack(
+                  children: [
+                    mainContent,
+                    _FullScreenImageViewer(
+                      imageUrl: _fullScreenImageUrl!,
+                      onClose: () {
+                        setState(() {
+                          _fullScreenImageUrl = null;
+                        });
+                      },
+                      onSave: _saveImageToGallery,
+                      onShare: _shareImage,
+                    ),
+                  ],
+                );
+              }
+
+              return mainContent;
+            },
+          ),
         ),
       ),
     );

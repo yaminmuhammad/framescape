@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
@@ -31,6 +32,11 @@ class ImageService {
     required String category,
   }) async {
     try {
+      // DEBUG: Check auth state
+      final currentUser = FirebaseAuth.instance.currentUser;
+      print('🔐 Auth Debug - Current user: ${currentUser?.uid}');
+      print('🔐 Auth Debug - Is anonymous: ${currentUser?.isAnonymous}');
+
       final callable = _functions.httpsCallable('generateImage');
       final result = await callable.call({
         'imagePath': imagePath,
