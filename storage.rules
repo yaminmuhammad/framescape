@@ -14,8 +14,8 @@ service firebase.storage {
     }
 
     // Generated images folder - accessible by Cloud Functions and owner
-    match /generated/{userId}/{allPaths=**} {
-      // Allow public read access for testing
+    match /users/{userId}/generated/{allPaths=**} {
+      // Allow public read access for sharing
       allow read: if true;
       // Write is done by Cloud Functions (admin SDK), not client
     }
