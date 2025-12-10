@@ -4,8 +4,8 @@
 
 FrameScape is a Flutter mobile application that transforms single portrait photos into multiple AI-generated travel and lifestyle scenes perfect for Instagram, TikTok, and other social media platforms. Built with Firebase integration and Google Gemini AI for seamless image generation.
 
-![FrameScape Demo](https://via.placeholder.com/800x400/6366f1/ffffff?text=FrameScape+AI+Photo+App)
 
+[![FrameScape Demo](https://img.youtube.com/vi/iQHDiPrrND4/maxresdefault.jpg)](https://youtu.be/iQHDiPrrND4)
 ---
 
 ## 🎯 Features
