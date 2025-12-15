@@ -11,6 +11,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../bloc/auth/auth_bloc.dart';
 import '../bloc/image/image_bloc.dart';
+import 'empty_state_screen.dart';
+import 'error_screen.dart';
+import 'loading_screen.dart';
+import 'results_screen.dart';
+import '../models/category_option.dart';
 
 /// Main home screen with Apple Design style - Social Media Photo AI
 class HomeScreen extends StatefulWidget {
@@ -106,637 +111,86 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     context.read<ImageBloc>().add(ImageGenerate(_selectedCategory));
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+import 'package:framescape/screens/empty_state_screen.dart';
+import 'package:framescape/screens/error_screen.dart';
+import 'package:framescape/screens/loading_screen.dart';
+import 'package:framescape/screens/results_screen.dart';
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      body: SafeArea(
-        child: MultiBlocListener(
-          listeners: [
-            BlocListener<AuthBloc, AuthState>(
-              listener: (context, state) {
-                if (state.status == AuthStatus.error &&
-                    state.errorMessage != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Auth Error: ${state.errorMessage}'),
-                      backgroundColor: colorScheme.error,
-                      behavior: SnackBarBehavior.floating,
-                      duration: const Duration(seconds: 4),
-                    ),
-                  );
-                }
-              },
-            ),
-            BlocListener<ImageBloc, ImageState>(
-              listener: (context, state) {
-                if (state.status == ImageStatus.error &&
-                    state.errorMessage != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(state.errorMessage!),
-                      backgroundColor: colorScheme.error,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              },
-            ),
-          ],
-          child: BlocBuilder<ImageBloc, ImageState>(
-            builder: (context, state) {
-              final mainContent = CustomScrollView(
-                slivers: [
-                  // App Bar
-                  SliverAppBar(
-                    floating: true,
-                    backgroundColor: colorScheme.surface,
-                    surfaceTintColor: Colors.transparent,
-                    title: Text(
-                      'FrameScape',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    centerTitle: false,
-                    // actions: [
-                    //   BlocBuilder<AuthBloc, AuthState>(
-                    //     builder: (context, authState) {
-                    //       return IconButton(
-                    //         icon: Icon(
-                    //           authState.isAuthenticated
-                    //               ? Icons.person
-                    //               : Icons.person_outline,
-                    //           color: colorScheme.primary,
-                    //         ),
-                    //         onPressed: () {
-                    //           // Show user info or login
-                    //         },
-                    //       );
-                    //     },
-                    //   ),
-                    // ],
-                  ),
-
-                  // Content
-                  SliverPadding(
-                    padding: const EdgeInsets.all(20),
-                    sliver: SliverList(
-                      delegate: SliverChildListDelegate([
-                        // Image Selection Area
-                        _buildImageArea(state, colorScheme),
-                        const SizedBox(height: 24),
-
-                        // Category Selection
-                        _buildCategorySection(colorScheme),
-                        const SizedBox(height: 20),
-
-                        // Generate Button
-                        _buildGenerateButton(state, colorScheme),
-                        const SizedBox(height: 32),
-
-                        // Results Section
-                        if (state.hasResult || state.isGenerating) ...[
-                          _buildResultSection(state, colorScheme),
-                        ],
-                      ]),
-                    ),
-                  ),
-                ],
-              );
-
-              // Full-screen image viewer
-              if (_fullScreenImageUrl != null) {
-                return Stack(
-                  children: [
-                    mainContent,
-                    _FullScreenImageViewer(
-                      imageUrl: _fullScreenImageUrl!,
-                      onClose: () {
-                        setState(() {
-                          _fullScreenImageUrl = null;
-                        });
-                      },
-                      onSave: _saveImageToGallery,
-                      onShare: _shareImage,
-                    ),
-                  ],
-                );
-              }
-
-              return mainContent;
-            },
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImageArea(ImageState state, ColorScheme colorScheme) {
-    return GestureDetector(
-      onTap: _showImageSourceDialog,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        height: 280,
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: state.hasImage
-                ? colorScheme.primary.withOpacity(0.5)
-                : colorScheme.outline.withOpacity(0.3),
-            width: 2,
-          ),
-          boxShadow: state.hasImage
-              ? [
-                  BoxShadow(
-                    color: colorScheme.primary.withOpacity(0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ]
-              : null,
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(22),
-          child: state.hasImage
-              ? Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.file(state.selectedImage!, fit: BoxFit.cover),
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: Material(
-                        color: Colors.black54,
-                        borderRadius: BorderRadius.circular(20),
-                        child: IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white),
-                          onPressed: () {
-                            context.read<ImageBloc>().add(ImageCleared());
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              : Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer.withOpacity(0.5),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.add_photo_alternate_outlined,
-                          size: 40,
-                          color: colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Tap to select an image',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w500,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'From gallery or camera',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: colorScheme.outline,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCategorySection(ColorScheme colorScheme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Choose Your Scene',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: colorScheme.onSurface,
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 80,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _categories.length,
-            itemBuilder: (context, index) {
-              final category = _categories[index];
-              final isSelected = _selectedCategory == category.id;
-              return Container(
-                margin: const EdgeInsets.only(right: 12),
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedCategory = category.id;
-                    });
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 80,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? colorScheme.primary
-                          : colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isSelected
-                            ? colorScheme.primary
-                            : colorScheme.outline.withOpacity(0.2),
-                        width: 2,
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          category.icon,
-                          size: 28,
-                          color: isSelected
-                              ? colorScheme.onPrimary
-                              : colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          category.name.split(' ').first,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: isSelected
-                                ? colorScheme.onPrimary
-                                : colorScheme.onSurfaceVariant,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: MultiBlocListener(
+      listeners: [
+        BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state.status == AuthStatus.error &&
+                state.errorMessage != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Auth Error: ${state.errorMessage}'),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                  behavior: SnackBarBehavior.floating,
+                  duration: const Duration(seconds: 4),
                 ),
               );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGenerateButton(ImageState state, ColorScheme colorScheme) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      height: 56,
-      child: ElevatedButton(
-        onPressed: state.isGenerating || !state.hasImage ? null : _onGenerate,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: colorScheme.primary,
-          foregroundColor: colorScheme.onPrimary,
-          disabledBackgroundColor: colorScheme.surfaceContainerHighest,
-          disabledForegroundColor: colorScheme.outline,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: state.hasImage ? 4 : 0,
-          shadowColor: colorScheme.primary.withOpacity(0.4),
-        ),
-        child: state.isGenerating
-            ? Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: colorScheme.onPrimary,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Generating...',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.auto_awesome,
-                    size: 22,
-                    color: state.hasImage
-                        ? colorScheme.onPrimary
-                        : colorScheme.outline,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Generate Magic',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      color: state.hasImage
-                          ? colorScheme.onPrimary
-                          : colorScheme.outline,
-                    ),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-
-  Widget _buildResultSection(ImageState state, ColorScheme colorScheme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header with animated icon
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 500),
-          child: state.isGenerating
-              ? Row(
-                  key: const ValueKey('generating'),
-                  children: [
-                    Icon(
-                      Icons.auto_awesome,
-                      color: colorScheme.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Generating Magic...',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                )
-              : Row(
-                  key: const ValueKey('generated'),
-                  children: [
-                    Icon(
-                      Icons.auto_awesome,
-                      color: colorScheme.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Generated Images',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-        ),
-        const SizedBox(height: 16),
-
-        // Grid of generated images or skeleton
-        state.isGenerating
-            ? _AnimatedGeneratingGrid(colorScheme: colorScheme)
-            : GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 0.8,
-                ),
-                itemCount: state.generatedImageUrls.length,
-                itemBuilder: (context, index) {
-                  return _buildGeneratedImageTile(state, colorScheme, index);
-                },
-              ),
-
-        const SizedBox(height: 16),
-
-        // Share/Save buttons (disabled during generation)
-        if (!state.isGenerating)
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    if (state.generatedImageUrls.isNotEmpty) {
-                      _saveAllImages(state.generatedImageUrls);
-                    }
-                  },
-                  icon: const Icon(Icons.download, size: 20),
-                  label: const Text('Save All'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primaryContainer,
-                    foregroundColor: colorScheme.onPrimaryContainer,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    if (state.generatedImageUrls.isNotEmpty) {
-                      _shareAllImages(state.generatedImageUrls);
-                    }
-                  },
-                  icon: const Icon(Icons.share, size: 20),
-                  label: const Text('Share'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.secondaryContainer,
-                    foregroundColor: colorScheme.onSecondaryContainer,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          )
-        else
-          // Disabled skeleton buttons during generation
-          _DisabledButtonSkeleton(colorScheme: colorScheme),
-      ],
-    );
-  }
-
-  Widget _buildGeneratedImageTile(
-    ImageState state,
-    ColorScheme colorScheme,
-    int index,
-  ) {
-    final imageUrl = index < state.generatedImageUrls.length
-        ? state.generatedImageUrls[index]
-        : null;
-
-    return GestureDetector(
-      onTap: imageUrl != null && !state.isGenerating
-          ? () {
-              setState(() {
-                _fullScreenImageUrl = imageUrl;
-              });
             }
-          : null,
-      child: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colorScheme.outline.withOpacity(0.2)),
+          },
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: state.isGenerating
-              ? _AnimatedLoadingTile(colorScheme: colorScheme)
-              : Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    // Actual generated image
-                    if (imageUrl != null)
-                      Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
-                                  : null,
-                            ),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: colorScheme.primaryContainer.withOpacity(
-                              0.3,
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.broken_image,
-                                  size: 48,
-                                  color: colorScheme.outline,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Failed to load',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: colorScheme.outline,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      )
-                    else
-                      Container(
-                        color: colorScheme.primaryContainer.withOpacity(0.3),
-                        child: const Center(
-                          child: Icon(
-                            Icons.image_outlined,
-                            size: 48,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ),
-                    // Tap indicator (only when not generating)
-                    if (imageUrl != null && !state.isGenerating)
-                      Positioned(
-                        top: 8,
-                        left: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black54,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.fullscreen,
-                            size: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    // Overlay with action buttons
-                    Positioned(
-                      bottom: 8,
-                      right: 8,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          FloatingActionButton.small(
-                            heroTag: 'save_$index',
-                            onPressed: () {
-                              if (imageUrl != null) {
-                                _saveImageToGallery(imageUrl);
-                              }
-                            },
-                            backgroundColor: Colors.white,
-                            child: Icon(
-                              Icons.download,
-                              size: 16,
-                              color: colorScheme.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          FloatingActionButton.small(
-                            heroTag: 'share_$index',
-                            onPressed: () {
-                              if (imageUrl != null) {
-                                _shareImage(imageUrl);
-                              }
-                            },
-                            backgroundColor: Colors.white,
-                            child: Icon(
-                              Icons.share,
-                              size: 16,
-                              color: colorScheme.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+        BlocListener<ImageBloc, ImageState>(
+          listener: (context, state) {
+            if (state.status == ImageStatus.error &&
+                state.errorMessage != null) {
+              // Error state is now handled by the ErrorScreen
+            }
+          },
         ),
+      ],
+      child: BlocBuilder<ImageBloc, ImageState>(
+        builder: (context, state) {
+          switch (state.status) {
+            case ImageStatus.generating:
+              return const LoadingScreen();
+            case ImageStatus.error:
+              return ErrorScreen(
+                onRetry: () {
+                  context.read<ImageBloc>().add(ImageCleared());
+                },
+              );
+            case ImageStatus.success:
+              return ResultsScreen(
+                generatedImageUrls: state.generatedImageUrls,
+                originalImage: state.selectedImage!,
+                onGenerateMore: () {
+                  context.read<ImageBloc>().add(ImageCleared());
+                },
+                onSave: _saveImageToGallery,
+                onShare: _shareImage,
+              );
+            case ImageStatus.initial:
+            case ImageStatus.cleared:
+            case ImageStatus.selected:
+            default:
+              return EmptyStateScreen(
+                onPickImage: _showImageSourceDialog,
+                onGenerate: _onGenerate,
+                onClearImage: () {
+                  context.read<ImageBloc>().add(ImageCleared());
+                },
+                state: state,
+                categories: _categories,
+                selectedCategory: _selectedCategory,
+                onCategorySelected: (id) {
+                  setState(() {
+                    _selectedCategory = id;
+                  });
+                },
+              );
+          }
+        },
       ),
-    );
-  }
+    ),
+  );
+}
 
   Future<void> _saveImageToGallery(String imageUrl) async {
     if (!mounted) return;
@@ -1736,11 +1190,3 @@ class _FullScreenImageViewer extends StatelessWidget {
   }
 }
 
-/// Category option model
-class CategoryOption {
-  final String id;
-  final String name;
-  final IconData icon;
-
-  CategoryOption({required this.id, required this.name, required this.icon});
-}
