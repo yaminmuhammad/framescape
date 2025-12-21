@@ -32,6 +32,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _authService.signInAnonymously();
       // State will be updated via AuthStateChanged listener
     } catch (e) {
+      // DEBUG: Log the full error
+      print('❌ AuthBloc Error: $e');
       emit(AuthState.error(e.toString()));
     }
   }

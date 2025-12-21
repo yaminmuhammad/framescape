@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
 import 'bloc/auth/auth_bloc.dart';
 import 'bloc/image/image_bloc.dart';
@@ -27,24 +28,44 @@ class PhotoAIApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Photo AI',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF6750A4),
-            brightness: Brightness.light,
-          ),
-          useMaterial3: true,
-          fontFamily: 'SF Pro Display',
-        ),
-        darkTheme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF6750A4),
-            brightness: Brightness.dark,
-          ),
-          useMaterial3: true,
-          fontFamily: 'SF Pro Display',
-        ),
+        theme: _buildTheme(Brightness.light),
+        darkTheme: _buildTheme(Brightness.dark),
         themeMode: ThemeMode.system,
         home: const HomeScreen(),
+      ),
+    );
+  }
+
+  ThemeData _buildTheme(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+    final baseColor = const Color(0xFF2bee79); // Primary logic from design
+
+    return ThemeData(
+      useMaterial3: true,
+      brightness: brightness,
+      colorScheme:
+          ColorScheme.fromSeed(
+            seedColor: baseColor,
+            brightness: brightness,
+            primary: baseColor,
+            surface: isDark ? const Color(0xFF152a1f) : const Color(0xFFffffff),
+
+            // Custom background colors from design
+            surfaceContainerHighest: isDark
+                ? const Color(0xFF152a1f)
+                : const Color(0xFFf6f8f7),
+          ).copyWith(
+            surface: isDark ? const Color(0xFF152a1f) : const Color(0xFFffffff),
+            shadow: isDark
+                ? Colors.black.withOpacity(0.5)
+                : Colors.grey.withOpacity(0.1),
+          ),
+      scaffoldBackgroundColor: isDark
+          ? const Color(0xFF102217)
+          : const Color(0xFFf6f8f7),
+      fontFamily: GoogleFonts.beVietnamPro().fontFamily,
+      textTheme: GoogleFonts.beVietnamProTextTheme(
+        isDark ? ThemeData.dark().textTheme : ThemeData.light().textTheme,
       ),
     );
   }
