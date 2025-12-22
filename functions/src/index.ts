@@ -67,37 +67,72 @@ export const generateImage = onCall(
       );
     }
 
-    // Smart prompts for different categories
+    // Base photorealistic photography rules
+    const photoRules = `Generate a single, cohesive, photorealistic image that looks like it was captured naturally on a modern smartphone camera.
+
+The person and the environment must feel like they belong in the same scene, with consistent lighting direction, realistic shadows, natural color grading, and correct perspective.
+
+Avoid any "cut-out", "pasted", or composited appearance. The subject should be naturally integrated into the environment, with soft edge transitions, accurate ambient lighting, and subtle light reflections on skin and clothing.
+
+Use realistic mobile photography characteristics:
+– natural daylight or indoor ambient light
+– slight depth of field (smartphone portrait style, not studio)
+– mild lens imperfections (very subtle noise, natural sharpness)
+– authentic skin tones and realistic textures
+
+The final result should look like a real photo taken on a phone, not an AI composite or background replacement.`;
+
+    // Smart prompts for different categories with photorealistic rules
     const categoryPrompts: Record<string, string[]> = {
       beach: [
-        "Transform this photo into a tropical beach paradise scene with golden sand, crystal blue water, and palm trees. Make it look like a perfect Instagram beach vacation moment.",
-        "Create a dreamy beach getaway scene with this person enjoying the sunset by the ocean, with warm orange and pink colors in the sky.",
-        "Turn this into a luxurious beach resort scene with turquoise water, white sand, and tropical vibes perfect media.",
+        `${photoRules}\n\nScene: Place this person naturally at a tropical beach paradise with golden sand, crystal blue water, and palm trees. Capture it as a candid vacation moment with warm natural sunlight.`,
+        `${photoRules}\n\nScene: Show this person enjoying a sunset by the ocean, with warm orange and pink colors in the sky reflecting on the water. Natural golden hour lighting.`,
+        `${photoRules}\n\nScene: Create a relaxed beach scene with turquoise water, white sand, and tropical vibes. The person should look naturally placed as if actually there.`,
       ],
       city: [
-        "Transform this into an urban cityscape scene with modern skyscrapers, busy streets, and vibrant city lights. Make it look like a trendy city break.",
-        "Create a stylish city adventure scene with this person exploring a beautiful metropolitan area with iconic buildings and street art.",
-        "Turn this into a cosmopolitan lifestyle scene with urban landscapes, coffee shops, and city exploration vibes.",
+        `${photoRules}\n\nScene: Place this person in an urban cityscape with modern skyscrapers and vibrant city atmosphere. Natural daylight with building shadows.`,
+        `${photoRules}\n\nScene: Show this person exploring a beautiful metropolitan area with iconic buildings. Street photography style with natural ambient lighting.`,
+        `${photoRules}\n\nScene: Create a stylish coffee shop moment in a trendy urban neighborhood. Warm indoor lighting with city view through windows.`,
       ],
       roadtrip: [
-        "Create an epic road trip adventure scene with this person on a scenic highway surrounded by mountains, forests, and open skies.",
-        "Transform this into a van life moment with a camper van on a beautiful mountain road, perfect for travel enthusiasts.",
-        "Turn this into a classic American road trip scene with endless highways, rest stops, and adventure on the open road.",
+        `${photoRules}\n\nScene: Place this person on a scenic highway surrounded by mountains and open skies. Natural outdoor lighting with adventure vibes.`,
+        `${photoRules}\n\nScene: Show this person with a camper van on a beautiful mountain road. Golden hour lighting with travel exploration mood.`,
+        `${photoRules}\n\nScene: Create a classic road trip scene with endless highways and dramatic landscapes. Natural sunlight and travel adventure atmosphere.`,
       ],
       mountain: [
-        "Create a breathtaking mountain adventure scene with snow-capped peaks, alpine lakes, and this person enjoying the majestic wilderness.",
-        "Transform this into a hiking adventure scene with mountain trails, pine forests, and panoramic views from the summit.",
-        "Turn this into a serene mountain retreat with dramatic peaks, sunrise views, and peaceful nature vibes.",
+        `${photoRules}\n\nScene: Place this person in a breathtaking mountain setting with snow-capped peaks and alpine scenery. Natural outdoor lighting.`,
+        `${photoRules}\n\nScene: Show this person on a hiking trail with mountain vistas and pine forests. Natural daylight filtering through trees.`,
+        `${photoRules}\n\nScene: Create a serene mountain lake scene with dramatic peaks in the background. Sunrise/sunset golden hour lighting.`,
       ],
       cafe: [
-        "Create a cozy cafe culture scene with this person enjoying coffee at a trendy urban coffee shop with warm lighting and aesthetic vibes.",
-        "Transform this into a Parisian-style cafe moment with outdoor seating, croissants, and elegant coffee culture.",
-        "Turn this into a hygge-inspired cafe scene with warm lighting, books, coffee, and cozy interior design.",
+        `${photoRules}\n\nScene: Place this person at a cozy cafe with warm interior lighting, enjoying coffee. Natural indoor ambient light.`,
+        `${photoRules}\n\nScene: Show this person at a Parisian-style outdoor cafe with elegant atmosphere. Natural daylight with soft shadows.`,
+        `${photoRules}\n\nScene: Create a hygge-inspired coffee shop moment with books and warm lighting. Cozy indoor atmosphere with natural window light.`,
       ],
       sunset: [
-        "Create a stunning golden hour sunset scene with this person silhouetted against a dramatic orange and pink sky.",
-        "Transform this into a magical sunset beach scene with warm colors reflecting on the water and a perfect evening atmosphere.",
-        "Turn this into a romantic sunset landscape with this person enjoying the beautiful colors of twilight.",
+        `${photoRules}\n\nScene: Place this person against a stunning golden hour sunset with dramatic orange and pink sky. Natural backlighting.`,
+        `${photoRules}\n\nScene: Show this person at a beach during magical sunset with warm colors reflecting on water. Golden hour photography.`,
+        `${photoRules}\n\nScene: Create a romantic sunset landscape scene with beautiful twilight colors. Natural evening ambient lighting.`,
+      ],
+      cyberpunk: [
+        `${photoRules}\n\nScene: Place this person in a neon-lit cyberpunk city street at night with vibrant purple and blue lights. Night photography with neon reflections.`,
+        `${photoRules}\n\nScene: Show this person in a futuristic urban environment with holographic signs and rain-slicked streets. Dramatic neon lighting.`,
+        `${photoRules}\n\nScene: Create a dystopian city scene with towering buildings and neon advertisements. Moody night atmosphere with colorful artificial lighting.`,
+      ],
+      studio: [
+        `${photoRules}\n\nScene: Place this person in a professional photography studio with clean white background. Soft studio lighting setup.`,
+        `${photoRules}\n\nScene: Show this person with dramatic studio lighting and artistic shadows. Professional portrait photography setup.`,
+        `${photoRules}\n\nScene: Create a fashion photography studio scene with colored gel lights and modern backdrop. Professional lighting arrangement.`,
+      ],
+      nature: [
+        `${photoRules}\n\nScene: Place this person in a lush forest with sunlight filtering through the trees. Natural dappled lighting and green surroundings.`,
+        `${photoRules}\n\nScene: Show this person in a flower field during spring with vibrant colors. Natural daylight and nature photography style.`,
+        `${photoRules}\n\nScene: Create a peaceful lakeside scene with this person enjoying nature. Calm water reflections and natural outdoor lighting.`,
+      ],
+      retro: [
+        `${photoRules}\n\nScene: Place this person in a vintage 1970s-style setting with retro decor and warm color grading. Film photography aesthetic.`,
+        `${photoRules}\n\nScene: Show this person at a classic American diner with neon signs and vintage atmosphere. Nostalgic retro lighting.`,
+        `${photoRules}\n\nScene: Create a vintage Polaroid-style scene with faded colors and retro environment. Classic film camera aesthetic.`,
       ],
     };
 

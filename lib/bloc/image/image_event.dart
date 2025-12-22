@@ -12,6 +12,9 @@ class ImageSelected extends ImageEvent {
 /// Clear selected image
 class ImageCleared extends ImageEvent {}
 
+/// Prepare for new generation (clears image but keeps history)
+class PrepareForNewGeneration extends ImageEvent {}
+
 /// Generate AI content from the selected image
 class ImageGenerate extends ImageEvent {
   final String category;

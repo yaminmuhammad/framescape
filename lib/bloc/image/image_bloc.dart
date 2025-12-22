@@ -18,6 +18,7 @@ class ImageBloc extends Bloc<ImageEvent, ImageState> {
     on<ImageSelected>(_onImageSelected);
     on<ImageCleared>(_onImageCleared);
     on<ImageGenerate>(_onImageGenerate);
+    on<PrepareForNewGeneration>(_onPrepareForNewGeneration);
   }
 
   void _onImageSelected(ImageSelected event, Emitter<ImageState> emit) {
@@ -25,13 +26,26 @@ class ImageBloc extends Bloc<ImageEvent, ImageState> {
       state.copyWith(
         status: ImageStatus.imageSelected,
         selectedImage: event.imageFile,
-        clearGeneratedImages: true,
+        // Keep previous generated images for Recent Creations
       ),
     );
   }
 
   void _onImageCleared(ImageCleared event, Emitter<ImageState> emit) {
     emit(const ImageState());
+  }
+
+  void _onPrepareForNewGeneration(
+    PrepareForNewGeneration event,
+    Emitter<ImageState> emit,
+  ) {
+    // Keep generated images for Recent Creations, but reset everything else
+    emit(
+      ImageState(
+        status: ImageStatus.initial,
+        generatedImageUrls: state.generatedImageUrls,
+      ),
+    );
   }
 
   Future<void> _onImageGenerate(

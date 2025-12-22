@@ -21,11 +21,21 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final ImagePicker _picker = ImagePicker();
-  String _selectedCategory = 'cyberpunk'; // Default from design
+  String _selectedCategory = 'beach'; // Default to first category
   String? _fullScreenImageUrl;
 
-  // Updated categories to match Design
+  // Updated categories to match Cloud Function categoryPrompts
   final List<CategoryOption> _categories = [
+    CategoryOption(id: 'beach', name: 'Beach', icon: Icons.beach_access),
+    CategoryOption(id: 'city', name: 'City', icon: Icons.location_city),
+    CategoryOption(
+      id: 'roadtrip',
+      name: 'Road Trip',
+      icon: Icons.directions_car,
+    ),
+    CategoryOption(id: 'mountain', name: 'Mountain', icon: Icons.terrain),
+    CategoryOption(id: 'cafe', name: 'Cafe', icon: Icons.coffee),
+    CategoryOption(id: 'sunset', name: 'Sunset', icon: Icons.wb_twilight),
     CategoryOption(
       id: 'cyberpunk',
       name: 'Cyberpunk',
@@ -130,7 +140,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   void _reset() {
-    context.read<ImageBloc>().add(ImageCleared());
+    // Use PrepareForNewGeneration to keep recent creations
+    context.read<ImageBloc>().add(PrepareForNewGeneration());
   }
 
   Future<void> _saveImageToGallery(String imageUrl) async {
@@ -391,24 +402,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
 
-            // Recent Creations (Hidden if has result)
-            if (!state.hasResult)
-              SliverToBoxAdapter(
-                child: Opacity(
-                  opacity:
-                      state.isGenerating || state.status == ImageStatus.error
-                      ? 0.5
-                      : 1.0,
-                  child: IgnorePointer(
-                    ignoring:
-                        state.isGenerating || state.status == ImageStatus.error,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 24, bottom: 120),
-                      child: _buildRecentCreations(colorScheme),
-                    ),
+            // Recent Creations (Always visible)
+            SliverToBoxAdapter(
+              child: Opacity(
+                opacity: state.isGenerating || state.status == ImageStatus.error
+                    ? 0.5
+                    : 1.0,
+                child: IgnorePointer(
+                  ignoring:
+                      state.isGenerating || state.status == ImageStatus.error,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 24, bottom: 120),
+                    child: _buildRecentCreations(colorScheme),
                   ),
                 ),
               ),
+            ),
 
             // Results Grid (Only if has result)
             if (state.hasResult) ...[
@@ -1029,91 +1038,156 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildRecentCreations(ColorScheme colorScheme) {
-    // Dummy Data for visual reference as in design
-    final recentImages = [
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDvfOTkVWICMWqLXRLV6fg4rcqs49t8TH2qmEq-QNTW_ipkb-6hhFcoCP3bNTbvCgmgpwYa4_6I-4UW558b-v5PccTEWaeMbbGcwkuJjI20hnalpBmuZ9uWUFZ_T61a7dQ9WLBlIkwy2jRw5kHYqwMpbeVttu1o0fxhHFqIdaxsGLPknOBTkn2JK7LMfQ0YIUll1SYLSn9OOwOLs99D56Fmu7sgbW5wmx6-yJQf8fSPOjqs6GZ1dWeka5bZULsGEJfjjJTqj4Rk2O0',
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuD_bgAG0bLGhRdMo6t-rU-2LO0hNSYWiPIV6tchIc9l_6Z5AHOgzwa21qK-YJhgDHzHUCMPu08YbxYgYsxbAS2EWZP8Y_2of1M074-oxuyHcm8Lffed6E6QATUZg3Pd6fNbjDeyumhwUv57TlqMsKILkGZWC3JDzuEVQaAFc7E-MQyx5KGxzK8Pl9FQ89uFeha57tXNs8nxRgj7cmYgL2FS5iMTA59njAFlnL9r-I3bOB2IsBTxNd_fG_rseLv4vUg6GQn98junkNg',
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuC3skJsVg3uDH0NFEcn0iYdKDKjzWB1ItMU5Cz84boE9Y3mAvWeyynty6OLq4PsJcl7EjPFon2q-KOhxnYyukRp1xGVjJ9DEjbZwG0JKZ66DVnldr5vfJDG3pjB6Gwjr6mIuclhfbwcLpLMUmGKOa16g9JwvcI9z6QSZDOVcUIJHC-wCV9RGQq6ZN6SjljBNfJsVMnEwZbSeoQOmZbPw6u4GYPiIWZHrh4QoVaa1T371FoU2t1VmUfZyQMLq_Hx3pXJJSsqHcu_B6Y',
-    ];
-    final recentTitles = ['Neon Portrait', 'Cyber City', 'Synthwave'];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Text(
-            'Recent Creations',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-              letterSpacing: -0.5,
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 160,
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            scrollDirection: Axis.horizontal,
-            itemCount: recentImages.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 16),
-            itemBuilder: (context, index) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: colorScheme.surfaceContainerHighest,
-                      image: DecorationImage(
-                        image: NetworkImage(recentImages[index]),
-                        fit: BoxFit.cover,
-                      ),
+    // Use actual generated images from ImageBloc state if available
+    return BlocBuilder<ImageBloc, ImageState>(
+      builder: (context, state) {
+        // If no generated images, show empty state
+        if (state.generatedImageUrls.isEmpty) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  'Recent Creations',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: colorScheme.outline.withOpacity(0.1),
                     ),
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.4),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.download,
-                              color: Colors.white,
-                              size: 14,
-                            ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.photo_library_outlined,
+                        color: colorScheme.onSurface.withOpacity(0.4),
+                        size: 32,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          'Your generated images will appear here',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: colorScheme.onSurface.withOpacity(0.5),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: Text(
-                      recentTitles[index],
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface.withOpacity(0.6),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              );
-            },
-          ),
-        ),
-      ],
+                ),
+              ),
+            ],
+          );
+        }
+
+        // Show actual generated images
+        final recentImages = state.generatedImageUrls;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                'Recent Creations',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 160,
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                scrollDirection: Axis.horizontal,
+                itemCount: recentImages.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 16),
+                itemBuilder: (context, index) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _fullScreenImageUrl = recentImages[index];
+                          });
+                        },
+                        child: Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: colorScheme.surfaceContainerHighest,
+                            image: DecorationImage(
+                              image: NetworkImage(recentImages[index]),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          child: Stack(
+                            children: [
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: GestureDetector(
+                                  onTap: () =>
+                                      _saveImageToGallery(recentImages[index]),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withOpacity(0.5),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.download,
+                                      color: Colors.white,
+                                      size: 14,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 4),
+                        child: Text(
+                          'Scene ${index + 1}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
